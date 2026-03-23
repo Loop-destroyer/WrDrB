@@ -101,7 +101,7 @@ export default function Marketplace() {
             </div>
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: 8, padding: '0 16px 12px', overflowX: 'auto' }}>
+            <div className="hide-scroll" style={{ display: 'flex', gap: 8, padding: '0 16px 12px', overflowX: 'auto' }}>
                 {filters.map(f => (
                     <button key={f} className={`chip ${activeFilter === f ? 'active' : ''}`} onClick={() => setActiveFilter(f)}>
                         {f}

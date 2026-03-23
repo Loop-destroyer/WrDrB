@@ -77,6 +77,8 @@ export const MARKETPLACE_ITEMS = [
   { id: 'm4', name: 'Rick Owens DRKSHDW', brand: 'Rick Owens', price: '$480', category: 'Bottoms', sponsored: false, emoji: '🖤', match: 86, image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=300&q=80', synergy: [TOPS[1], SHOES[3]] },
   { id: 'm5', name: 'Palace Tri-Ferg', brand: 'Palace', price: '$95', category: 'Tops', sponsored: true, emoji: '🔺', match: 83, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&q=80', synergy: [BOTTOMS[3], SHOES[0]] },
   { id: 'm6', name: 'Salehe Bembury', brand: 'New Balance', price: '$200', category: 'Shoes', sponsored: false, emoji: '🎨', match: 79, image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=300&q=80', synergy: [BOTTOMS[0], TOPS[0]] },
+  { id: 'm7', name: 'Ice Chain 18k', brand: 'GLD', price: '$250', category: 'Bling', sponsored: true, emoji: '⛓️', match: 92, image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=300&q=80', synergy: [TOPS[2], BOTTOMS[0]] },
+  { id: 'm8', name: 'Silver Rings Set', brand: 'Vitaly', price: '$80', category: 'Bling', sponsored: false, emoji: '💍', match: 85, image: 'https://images.unsplash.com/photo-1605812860427-4024433a70fd?w=300&q=80', synergy: [TOPS[1], SHOES[1]] },
 ];
 
 export const FEED_POSTS = [

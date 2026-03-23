@@ -104,6 +104,36 @@ html, body {
 }
 
 .page-content::-webkit-scrollbar { display: none; }
+.page-content { scrollbar-width: none; }
+
+/* Utility to hide scrollbars globally on horizontal lists */
+.hide-scroll {
+  scrollbar-width: none;
+}
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Chip styles (used in Plug/Marketplace) */
+.chip {
+  flex-shrink: 0;
+  background: #1c1c1c;
+  border: 1.5px solid #333;
+  color: #aaa;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 5px 13px;
+  cursor: pointer;
+  transition: all 0.18s var(--transition-liquid);
+}
+.chip.active {
+  background: var(--cyber-yellow);
+  border-color: var(--cyber-yellow);
+  color: #000;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
 
 /* Top Bar */
 .top-bar {
@@ -1022,11 +1052,22 @@ html, body {
 
 /* Prismatic shimmer animation on shiny cards */
 @keyframes holoShimmer {
-  0%   { --holo-hue-shift: 0;   --holo-angle: 0deg; }
-  25%  { --holo-hue-shift: 90;  --holo-angle: 90deg; }
-  50%  { --holo-hue-shift: 180; --holo-angle: 180deg; }
-  75%  { --holo-hue-shift: 270; --holo-angle: 270deg; }
-  100% { --holo-hue-shift: 360; --holo-angle: 360deg; }
+  0% {
+    --holo-hue-shift: 0;
+    --holo-angle: 0deg;
+    background-position:
+      center,
+      0px center,
+      0% 0%;
+  }
+  100% {
+    --holo-hue-shift: 360;
+    --holo-angle: 360deg;
+    background-position:
+      center,
+      200px center,
+      100% 100%;
+  }
 }
 
 /* When shiny and NOT being hovered, play a slow auto-shimmer */

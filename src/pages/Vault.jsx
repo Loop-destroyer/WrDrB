@@ -29,7 +29,7 @@ const FILTER_OPTIONS = [
 ]
 
 // ── See All Modal ──────────────────────────────────────────────────────────────
-function SeeAllModal({ title, items, isFits, onSelect, onClose }) {
+function SeeAllModal({ title, items, isFits, onSelect, onClose, favorites = new Set() }) {
     return (
         <motion.div
             className="modal-overlay"
@@ -62,47 +62,70 @@ function SeeAllModal({ title, items, isFits, onSelect, onClose }) {
                         </button>
                     </div>
                 </div>
-                <div style={{ overflowY: 'auto', padding: '12px 16px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {items.map(item => (
-                        <motion.div
-                            key={item.id}
-                            whileHover={{ x: 4, background: '#1a1a1a' }}
-                            onClick={() => { onSelect(item); onClose() }}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: 14,
-                                background: '#161616', borderRadius: 14, padding: '10px 14px',
-                                cursor: 'pointer', border: '1px solid #222'
-                            }}
-                        >
-                            <div style={{
-                                width: 48, height: 48, borderRadius: 10, flexShrink: 0, overflow: 'hidden',
-                                background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: `2px solid ${isFits ? '#FF006E' : CATEGORY_COLORS[item.category] || '#555'}`
-                            }}>
-                                {item.image
-                                    ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : isFits
-                                        ? <span style={{ fontSize: 24 }}>{item.top?.emoji || '🔥'}</span>
-                                        : <span style={{ fontSize: 24 }}>{item.emoji}</span>
-                                }
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {item.name}
-                                </div>
-                                <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
-                                    {isFits
-                                        ? `${item.occasion || item.style} · ${item.season || ''} · ${item.wornCount}x worn`
-                                        : `${item.archetype} · XP ${item.stylePoints}`
-                                    }
-                                </div>
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 14, fontWeight: 900, color: '#FFD700', flexShrink: 0 }}>
-                                {isFits ? item.rating : `XP ${item.stylePoints}`}
-                            </div>
-                            <ChevronRight size={16} color="#444" />
-                        </motion.div>
-                    ))}
+                <div className="hide-scroll" style={{ overflowY: 'auto', padding: '12px 16px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {isFits ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14, justifyContent: 'center' }}>
+                            {items.map(fit => (
+                                <FitCard
+                                    key={fit.id}
+                                    fit={fit}
+                                    isFav={favorites.has(fit.id)}
+                                    onOpen={() => { onSelect(fit); onClose() }}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12 }}>
+                            {items.map(item => {
+                                const catColor = CATEGORY_COLORS[item.category] || '#555'
+                                return (
+                                    <motion.div
+                                        key={item.id}
+                                        whileHover={{ scale: 1.05, y: -4 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => { onSelect(item); onClose() }}
+                                        style={{
+                                            height: 110,
+                                            borderRadius: 16,
+                                            background: item.shiny
+                                                ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF006E 100%)'
+                                                : '#1a1a1a',
+                                            border: `3px solid ${catColor}`,
+                                            boxShadow: item.shiny
+                                                ? `0 0 18px ${catColor}99, 0 6px 16px rgba(0,0,0,0.4)`
+                                                : '0 4px 10px rgba(0,0,0,0.3)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                                        }}
+                                    >
+                                        {item.image
+                                            ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            : <span style={{ fontSize: 36 }}>{item.emoji}</span>
+                                        }
+                                        {favorites.has(item.id) && (
+                                            <div style={{ position: 'absolute', top: 5, right: 5, width: 16, height: 16, background: '#FF006E', borderRadius: '50%', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Heart size={9} color="#fff" fill="#fff" />
+                                            </div>
+                                        )}
+                                        {item.shiny && (
+                                            <div style={{ position: 'absolute', top: 5, left: 5, background: 'rgba(0,0,0,0.5)', padding: '2px 4px', borderRadius: 4, fontSize: 8, fontWeight: 800, color: '#FFD700' }}>
+                                                ✦ SHINY
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                                            background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(4px)',
+                                            padding: '3px 0', textAlign: 'center',
+                                            fontSize: 10, fontWeight: 800, color: '#fff',
+                                            fontFamily: 'var(--font-heading)'
+                                        }}>
+                                            XP {item.stylePoints || 80}
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </motion.div>
@@ -310,7 +333,7 @@ export default function Vault() {
             </div>
 
             {/* ── Filter Chips ──────────────────────────────────────────── */}
-            <div style={{ display: 'flex', gap: 6, padding: '10px 16px 8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div className="hide-scroll" style={{ display: 'flex', gap: 6, padding: '10px 16px 8px', overflowX: 'auto' }}>
                 {FILTER_OPTIONS.map(f => {
                     const isActive = activeFilter === f.key
                     const accentColor = f.key === 'all' ? '#FFD700' : (CATEGORY_COLORS[f.key] || CATEGORY_COLORS['Fits'])
@@ -339,7 +362,7 @@ export default function Vault() {
             </div>
 
             {/* ── Stats Row ───────────────────────────────────────────── */}
-            <div style={{ display: 'flex', gap: 8, padding: '0 16px 10px', overflowX: 'auto' }}>
+            <div className="hide-scroll" style={{ display: 'flex', gap: 8, padding: '0 16px 10px', overflowX: 'auto' }}>
                 {[
                     { icon: '👑', label: 'Total Drip', value: ALL_ITEMS.length },
                     { icon: '💛', label: 'Favs',       value: favorites.size },
@@ -476,6 +499,7 @@ export default function Vault() {
                         isFits={seeAllData.isFits}
                         onSelect={item => setSelectedCard(seeAllData.isFits ? { ...item, _isFit: true, category: 'Fit' } : item)}
                         onClose={() => setSeeAllData(null)}
+                        favorites={favorites}
                     />
                 )}
             </AnimatePresence>

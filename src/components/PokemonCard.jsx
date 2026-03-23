@@ -217,116 +217,155 @@ function WearOverlay({ wornCount }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
-// HOLOGRAPHIC SHINY EFFECT — Realistic foil simulation
+// HOLO SHINE — simeydotme/pokemon-cards-css technique
 //
-// How real Pokémon card holo works:
-//   1. The card surface is mostly silver/white (neutral metallic base)
-//   2. Iridescent colour only appears at the EDGES of the light band (thin stripes)
-//   3. The stripes SHIFT POSITION as the card tilts — background-position trick
-//   4. A tight specular highlight (white dot) tracks the cursor like a real reflection
-//   5. Everything is LOW opacity — subtractive, not additive colour saturation
+// CSS custom properties are set as inline vars on the card element:
+//   --pointer-x/y         : normalised mouse position 0%–100%
+//   --pointer-from-left/top: 0–1 fractions of pointer position
+//   --pointer-from-center  : 0–1 distance from centre
+//   --card-opacity         : 0 at rest, 1 while hovering
+//   --background-x/y       : remapped bg position (37%–63%)
 //
-// Layer stack:
-//   A. Foil microstructure: thin repeating linear bands — their position shifts with mouse
-//   B. Iridescent colour wash: hue rotates with tilt angle — very low opacity
-//   C. Specular highlight: tight radial white following cursor exactly
-//   D. Edge glow: very soft radial gradient from cursor to card edge (depth cue)
+// The .card-shine and .card-glare CSS classes (in index.css)
+// consume these vars to draw the iridescent foil + specular glare.
 // ════════════════════════════════════════════════════════════════════════════════
-// Static base angle used when not hovering (gives a diagonal rainbow stripe)
-const STATIC_ANGLE = 135
+function HoloShine({ isShiny, hovering, mx, my }) {
+    if (!isShiny) return null
 
-function HoloOverlay({ active, mx, my, isShiny }) {
-    // Persistent: always show. Shiny cards are brighter at rest.
-    const restOpacity  = isShiny ? 0.50 : 0.22
-    const hoverOpacity = isShiny ? 0.90 : 0.55
+    // Clamp helpers
+    const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
+    const adj = (v, iLo, iHi, oLo, oHi) => oLo + ((v - iLo) / (iHi - iLo)) * (oHi - oLo)
+    const round = (v, p = 2) => parseFloat(v.toFixed(p))
 
-    // When hovering use real mouse-derived angle; otherwise fixed diagonal
-    const angle = active
-        ? Math.atan2(my - 0.5, mx - 0.5) * (180 / Math.PI)
-        : STATIC_ANGLE
+    // mx, my are 0–1 normalised (set on parent via tilt system)
+    const px = cl(round(mx * 100), 0, 100)      // 0–100%
+    const py = cl(round(my * 100), 0, 100)
+    const fromLeft = px / 100                    // 0–1
+    const fromTop  = py / 100
+    const fromCtr  = cl(
+        Math.sqrt((py - 50) ** 2 + (px - 50) ** 2) / 50,
+        0, 1
+    )
+    const bgX = adj(px, 0, 100, 37, 63)
+    const bgY = adj(py, 0, 100, 33, 67)
+    const opacity = hovering ? 1 : 0
 
-    // Foil band offset — only shifts when hovering
-    const foilOffsetX = active ? (mx - 0.5) * 80 : 0
-    const foilOffsetY = active ? (my - 0.5) * 80 : 0
+    return (
+        <div
+            className={`card-holo-shiny${hovering ? ' card-holo-active' : ''}`}
+            style={{
+                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                pointerEvents: 'none', zIndex: 22,
+                '--pointer-x': `${px}%`,
+                '--pointer-y': `${py}%`,
+                '--pointer-from-left': fromLeft,
+                '--pointer-from-top':  `${round(fromTop, 4)}turn`,
+                '--pointer-from-center': fromCtr,
+                '--card-opacity':  opacity,
+                '--background-x':  `${round(bgX)}%`,
+                '--background-y':  `${round(bgY)}%`,
+            }}
+        >
+            <div className="card-shine"/>
+            <div className="card-glare"/>
+        </div>
+    )
+}
+// Thick adjacent bands (no gaps) at 45°.
+// Three RGB-offset layers animated at different speeds via CSS keyframes.
+// SVG feTurbulence smudges the edges for a realistic foil look.
+// ════════════════════════════════════════════════════════════════════════════════
+function ChromaticWaveOverlay({ id, isShiny }) {
+    if (!isShiny) return null
 
-    // Specular position — centre glow at rest, cursor-tracked on hover
-    const bx = active ? mx * 100 : 50
-    const by = active ? my * 100 : 35
-    const specularOpacity = active ? 0.80 : 0.30
-
-    const opacity = active ? hoverOpacity : restOpacity
+    const filterId = `cwa-${id}`
+    // Pitch = 60px: 20px band + 20px band + 20px band = one full repeat
+    // All three colour bands are adjacent (touch each other, no gap).
+    const bandR = `repeating-linear-gradient(
+        45deg,
+        rgba(255,18,80,0.22)   0px,
+        rgba(255,18,80,0.22)  20px,
+        rgba(0,200,255,0.20)  20px,
+        rgba(0,200,255,0.20)  40px,
+        rgba(220,255,30,0.18) 40px,
+        rgba(220,255,30,0.18) 60px
+    )`
 
     return (
         <div style={{
             position: 'absolute', inset: 0, borderRadius: 'inherit',
-            pointerEvents: 'none', zIndex: 22,
-            opacity,
-            transition: active ? 'opacity 0.15s ease' : 'opacity 0.6s ease',
+            pointerEvents: 'none', zIndex: 22, overflow: 'hidden',
         }}>
-            {/* ── Layer A: Foil microstructure ── */}
+            {/* SVG smudge warp */}
+            <svg width="0" height="0" style={{ position: 'absolute' }}>
+                <defs>
+                    <filter id={filterId} x="-10%" y="-10%" width="120%" height="120%">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.016"
+                            numOctaves="2" seed={7} result="noise"/>
+                        <feDisplacementMap in="SourceGraphic" in2="noise"
+                            scale="14" xChannelSelector="R" yChannelSelector="G"/>
+                    </filter>
+                </defs>
+            </svg>
+
+            {/* Red-offset layer (drifts slightly ahead) */}
             <div style={{
-                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                position: 'absolute', inset: '-8px 0 0 6px',
                 background: `repeating-linear-gradient(
-                    ${angle + 135}deg,
-                    transparent                        0px,
-                    transparent                        3px,
-                    rgba(255, 255, 255, 0.10)          3px,
-                    rgba(200, 255, 255, 0.14)          4px,
-                    rgba(255, 180, 255, 0.12)          5px,
-                    transparent                        6px,
-                    transparent                        9px,
-                    rgba(255, 255, 180, 0.10)          9px,
-                    rgba(180, 200, 255, 0.12)          10px,
-                    transparent                        11px,
-                    transparent                        18px
+                    45deg,
+                    rgba(255,10,70,0.26)   0px,
+                    rgba(255,10,70,0.26)  20px,
+                    transparent           20px,
+                    transparent           60px
                 )`,
-                backgroundSize: '100% 100%',
-                backgroundPosition: `${50 + foilOffsetX}% ${50 + foilOffsetY}%`,
+                backgroundSize: '84px 84px',
+                animation: 'chromaR 6s linear infinite',
+                filter: `url(#${filterId})`,
                 mixBlendMode: 'screen',
-                opacity: 1,
             }}/>
 
-            {/* ── Layer B: Iridescent colour wash ── */}
+            {/* Cyan-offset layer */}
             <div style={{
-                position: 'absolute', inset: 0, borderRadius: 'inherit',
-                background: `linear-gradient(
-                    ${angle + 90}deg,
-                    hsla(${angle + 0},   90%, 70%, 0.18) 0%,
-                    hsla(${angle + 60},  90%, 75%, 0.14) 25%,
-                    hsla(${angle + 120}, 90%, 70%, 0.16) 50%,
-                    hsla(${angle + 200}, 90%, 75%, 0.14) 75%,
-                    hsla(${angle + 280}, 90%, 70%, 0.18) 100%
+                position: 'absolute', inset: '0 6px -8px 0',
+                background: `repeating-linear-gradient(
+                    45deg,
+                    transparent           0px,
+                    transparent           20px,
+                    rgba(0,210,255,0.22)  20px,
+                    rgba(0,210,255,0.22)  40px,
+                    transparent           40px,
+                    transparent           60px
                 )`,
-                backgroundSize: `${120 + Math.abs(foilOffsetX)}% ${120 + Math.abs(foilOffsetY)}%`,
-                backgroundPosition: `${50 + foilOffsetX * 0.5}% ${50 + foilOffsetY * 0.5}%`,
+                backgroundSize: '84px 84px',
+                animation: 'chromaC 6s linear infinite 1s',
+                filter: `url(#${filterId})`,
+                mixBlendMode: 'screen',
+            }}/>
+
+            {/* Yellow/green layer */}
+            <div style={{
+                position: 'absolute', inset: 0,
+                background: `repeating-linear-gradient(
+                    45deg,
+                    transparent            0px,
+                    transparent           40px,
+                    rgba(200,255,20,0.18)  40px,
+                    rgba(200,255,20,0.18)  60px
+                )`,
+                backgroundSize: '84px 84px',
+                animation: 'chromaY 6s linear infinite 2s',
                 mixBlendMode: 'color-dodge',
-                opacity: 0.85,
+                opacity: 0.75,
             }}/>
 
-            {/* ── Layer C: Specular highlight — always a soft glow at rest ── */}
+            {/* Combined solid pass — no smudge, crisp pixel edges */}
             <div style={{
-                position: 'absolute', inset: 0, borderRadius: 'inherit',
-                background: `radial-gradient(
-                    ellipse ${active ? '28% 22%' : '60% 45%'} at ${bx}% ${by}%,
-                    rgba(255, 255, 255, ${active ? 0.95 : 0.55}) 0%,
-                    rgba(255, 255, 255, ${active ? 0.55 : 0.20}) 20%,
-                    rgba(255, 255, 255, ${active ? 0.15 : 0.06}) 50%,
-                    transparent               80%
-                )`,
-                mixBlendMode: 'overlay',
-                opacity: specularOpacity,
-            }}/>
-
-            {/* ── Layer D: Edge depth cue ── */}
-            <div style={{
-                position: 'absolute', inset: 0, borderRadius: 'inherit',
-                background: `radial-gradient(
-                    ellipse 80% 70% at ${bx}% ${by}%,
-                    rgba(255, 255, 255, 0.18) 0%,
-                    transparent               60%
-                )`,
-                mixBlendMode: 'soft-light',
-                opacity: 0.9,
+                position: 'absolute', inset: 0,
+                background: bandR,
+                backgroundSize: '84px 84px',
+                animation: 'chromaR 6s linear infinite',
+                mixBlendMode: 'screen',
+                opacity: 0.30,
             }}/>
         </div>
     )
@@ -384,71 +423,168 @@ function FitPopup({ fit, onClose }) {
     )
 }
 
-// ── Fit Card Body (when a Fit is opened as a card) ─────────────────────────
-function FitCardBody({ fit, onFitClick }) {
-    const pieces = [
-        fit.top       && { label: 'Top',      item: fit.top },
-        fit.overlayer && { label: 'Over',      item: fit.overlayer },
-        fit.bottom    && { label: 'Bottom',    item: fit.bottom },
-        fit.shoes     && { label: 'Shoes',     item: fit.shoes },
+// ── Fit Card Body — 50/50 split with rich info ───────────────────────────────
+function FitCardBody({ fit }) {
+    const rating     = fit.rating    ?? 8.0
+    const worn       = fit.wornCount ?? 0
+    const isOnePiece = !!fit.onePiece
+
+    // Left column: dynamic vertical image stack
+    const leftPieces = isOnePiece
+        ? [
+            { item: fit.onePiece, flex: 5,   label: 'One-Piece' },
+            fit.shoes && { item: fit.shoes, flex: 1.4, label: 'Shoes' },
+          ].filter(Boolean)
+        : [
+            fit.overlayer && { item: fit.overlayer, flex: 1.5, label: 'Over' },
+            fit.top       && { item: fit.top,       flex: 2.6, label: 'Top' },
+            fit.bottom    && { item: fit.bottom,    flex: 2.6, label: 'Bottom' },
+            fit.shoes     && { item: fit.shoes,     flex: 1.2, label: 'Shoes' },
+          ].filter(Boolean)
+
+    const tagList = [
+        fit.style     && { label: `✧ ${fit.style}`,     color: '#FFD700' },
+        fit.season    && { label: `🌤 ${fit.season}`,    color: '#39FF14' },
+        fit.occasion  && { label: `📅 ${fit.occasion}`,  color: '#a688fa' },
+        fit.archetype && { label: `🔥 ${fit.archetype}`, color: '#FF4500' },
     ].filter(Boolean)
-    const typeConfig = TYPE_MAPPING[fit.archetype || fit.style] || TYPE_MAPPING['Minimalist']
-    const conditionInfo = getCondition(fit.wornCount ?? 0)
+    const tickerTags   = [...tagList, ...tagList]
+    const tickerDur    = `${Math.max(8, tagList.length * 3.5)}s`
+
+    // Build a richer vibe description if none provided
+    const vibeText = fit.vibe ||
+        `${fit.style || 'Classic'} combo — ${fit.top?.name || 'top'} with ${fit.bottom?.name || 'bottoms'} and ${fit.shoes?.name || 'kicks'}. ${fit.season ? `Great for ${fit.season}.` : ''} Effortlessly put-together.`
+
+    const comboWhy = fit.comboReason ||
+        `The ${fit.top?.archetype || fit.style || 'neutral'} top contrasts well with the ${fit.bottom?.archetype || 'bottoms'}, creating a balanced silhouette. ${fit.shoes?.name ? `${fit.shoes.name} ground the look.` : ''}`
+
+    // Piece list for info column
+    const pieces = [
+        fit.overlayer && { label: 'Over',   item: fit.overlayer },
+        fit.top       && { label: 'Top',    item: fit.top },
+        fit.bottom    && { label: 'Bottom', item: fit.bottom },
+        fit.shoes     && { label: 'Shoes',  item: fit.shoes },
+        fit.onePiece  && { label: 'Fit',    item: fit.onePiece },
+    ].filter(Boolean)
+
+    const dripPct  = Math.round((rating / 10) * 100)
+    const wornPct  = Math.min(Math.round((worn / 100) * 100), 100)
 
     return (
-        <>
-            {/* Outfit image grid */}
-            <div style={{ margin: '8px 10px 0', height: 180, border: '3px solid rgba(0,0,0,0.3)', borderRadius: 4, background: typeConfig.bg, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: '100%', gap: 2, padding: 4 }}>
-                    {[fit.top, fit.overlayer ?? null, fit.bottom, fit.shoes].map((piece, i) => (
-                        <div key={i} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-                            {piece?.image ? <img src={piece.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/> : <span style={{ fontSize: piece ? 26 : 14, opacity: piece ? 1 : 0.3 }}>{piece?.emoji || '+'}</span>}
-                            {piece && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.65)', fontSize: 7, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '1px 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{piece.name}</div>}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', margin: '6px 8px 4px', gap: 6 }}>
+
+            {/* ── LEFT 50%: vertically stacked images ── */}
+            <div style={{ flex: '0 0 50%', display: 'flex', flexDirection: 'column', gap: 2, borderRadius: 8, overflow: 'hidden', background: '#111' }}>
+                {leftPieces.map(({ item, flex, label }) => (
+                    <div key={item.id} style={{ flex, position: 'relative', overflow: 'hidden', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+                        {item.image
+                            ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                            : <span style={{ fontSize: 26 }}>{item.emoji}</span>
+                        }
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.82))', fontSize: 8, fontWeight: 800, color: '#fff', textAlign: 'center', padding: '10px 4px 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: '#FFD70088', marginRight: 3 }}>{label.toUpperCase()}</span>{item.name}
                         </div>
-                    ))}
-                </div>
-            </div>
-            {/* Stats bar */}
-            <div style={{ background: 'rgba(0,0,0,0.5)', padding: '3px 12px', margin: '4px 10px 0', display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, fontStyle: 'italic', color: '#ccc', borderRadius: 4 }}>
-                <span>⭐ {fit.rating}/10</span>
-                <span>{fit.style}</span>
-                <span>{fit.wornCount ?? 0}x worn</span>
-                <span style={{ color: '#39FF14' }}>TRAINER</span>
-            </div>
-            {/* Info */}
-            <div style={{ flex: 1, padding: '8px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <div>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 2 }}>
-                        <span style={{ color: '#e33', fontSize: 11, fontWeight: 900, fontStyle: 'italic' }}>Vibe</span>
-                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 12, fontWeight: 800, color: '#111' }}>{fit.occasion || 'Everyday'}</span>
-                    </div>
-                    <div style={{ fontSize: 10, lineHeight: 1.45, color: '#222' }}>{fit.vibe || `A ${fit.style} ensemble for ${fit.occasion || 'daily wear'}.`}</div>
-                </div>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {fit.season   && <span style={{ background: '#ecfdf5', color: '#059669', fontSize: 9, fontWeight: 700, borderRadius: 20, padding: '2px 7px' }}>🌤 {fit.season}</span>}
-                    {fit.occasion && <span style={{ background: '#ede9fe', color: '#7c3aed', fontSize: 9, fontWeight: 700, borderRadius: 20, padding: '2px 7px' }}>📅 {fit.occasion}</span>}
-                    {fit.style    && <span style={{ background: '#fef3c7', color: '#d97706', fontSize: 9, fontWeight: 700, borderRadius: 20, padding: '2px 7px' }}>✧ {fit.style}</span>}
-                </div>
-                <hr style={{ border: 0, borderTop: '1px solid rgba(0,0,0,0.12)', margin: 0 }}/>
-                {pieces.map(({ label, item }) => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>{item.emoji}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                            <div style={{ fontSize: 9, color: '#666' }}>{label} · {item.archetype} · XP {item.stylePoints}</div>
-                        </div>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: CATEGORY_COLORS[item.category] || '#444', flexShrink: 0 }}/>
                     </div>
                 ))}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 9, color: '#555', fontWeight: 700 }}>DRIP</span>
-                    <div style={{ flex: 1, height: 5, background: '#ddd', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ width: `${(fit.rating / 10) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #32CD32, #FFD700, #FF4500)', borderRadius: 3 }}/>
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 900, color: '#e30000', fontFamily: 'var(--font-heading)' }}>{fit.rating}</span>
-                </div>
             </div>
-        </>
+
+            {/* ── RIGHT 50%: info + meters + ticker ── */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5, overflow: 'hidden' }}>
+
+                {/* ── Info section ── */}
+                <div style={{ flex: 1, padding: '5px 5px 0', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', minHeight: 0 }}>
+
+                    {/* Vibe header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 9, fontWeight: 900, fontStyle: 'italic', color: '#e33', textTransform: 'uppercase', letterSpacing: 0.5 }}>Vibe</span>
+                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>
+                            {fit.occasion || fit.style || 'Everyday'}
+                        </span>
+                    </div>
+
+                    {/* One-liner description */}
+                    <div style={{ fontSize: 10, lineHeight: 1.5, color: '#333', fontStyle: 'italic', borderLeft: '2px solid #FFD70066', paddingLeft: 5 }}>
+                        {vibeText}
+                    </div>
+
+                    {/* Why this combo works */}
+                    <div style={{ fontSize: 9, lineHeight: 1.45, color: '#555' }}>
+                        <span style={{ fontWeight: 800, color: '#444' }}>Why it works: </span>
+                        {comboWhy}
+                    </div>
+
+                    {/* Occasions + Season row */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 1 }}>
+                        {fit.occasion && <span style={{ fontSize: 8, background: '#210d3a', color: '#a688fa', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>📅 {fit.occasion}</span>}
+                        {fit.season   && <span style={{ fontSize: 8, background: '#0a2a0a', color: '#39FF14', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>🌤 {fit.season}</span>}
+                        {fit.style    && <span style={{ fontSize: 8, background: '#2a1a00', color: '#FFD700', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>✧ {fit.style}</span>}
+                    </div>
+
+                    {/* Piece list */}
+                    {pieces.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                            {pieces.map(({ label, item }) => (
+                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <span style={{ fontSize: 12 }}>{item.emoji}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 9, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                                        <div style={{ fontSize: 8, color: '#888' }}>{label} &middot; {item.archetype || item.category} &middot; <span style={{ color: '#FFD700' }}>XP {item.stylePoints}</span></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Frosted glass meter block ── */}
+                <div style={{
+                    flexShrink: 0,
+                    background: 'rgba(255,255,255,0.10)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    padding: '8px 9px',
+                    display: 'flex', flexDirection: 'column', gap: 7,
+                }}>
+                    {/* Drip */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                            <span style={{ fontSize: 8, fontWeight: 900, color: '#FF4500', letterSpacing: 1.5, textTransform: 'uppercase' }}>⚡ Drip</span>
+                            <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 900, color: '#FFD700', lineHeight: 1 }}>{rating}<span style={{ fontSize: 9, color: '#FF4500' }}>/10</span></span>
+                        </div>
+                        <div style={{ height: 12, background: 'rgba(0,0,0,0.35)', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, #32CD32 0%, #FFD700 ${dripPct * 0.6}%, #FF4500 ${dripPct}%, transparent ${dripPct}%)`, borderRadius: 6 }}/>
+                            <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg, transparent 0px, transparent 10px, rgba(0,0,0,0.12) 10px, rgba(0,0,0,0.12) 11px)', borderRadius: 6 }}/>
+                        </div>
+                    </div>
+                    {/* Worn */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                            <span style={{ fontSize: 8, fontWeight: 900, color: '#00BFFF', letterSpacing: 1.5, textTransform: 'uppercase' }}>👕 Worn</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: '#aaa', lineHeight: 1 }}>{worn}<span style={{ fontSize: 8, color: '#555' }}>×</span></span>
+                        </div>
+                        <div style={{ height: 12, background: 'rgba(0,0,0,0.35)', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, #00BFFF 0%, #a688fa ${wornPct}%, transparent ${wornPct}%)`, borderRadius: 6 }}/>
+                            <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg, transparent 0px, transparent 10px, rgba(0,0,0,0.12) 10px, rgba(0,0,0,0.12) 11px)', borderRadius: 6 }}/>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Tag ticker ── */}
+                {tickerTags.length > 0 && (
+                    <div style={{ flexShrink: 0, height: 26, overflow: 'hidden', background: '#0e0e0e', borderRadius: 5 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap', animation: `tagTicker ${tickerDur} linear infinite`, willChange: 'transform', paddingLeft: 8 }}>
+                            {tickerTags.map((t, i) => (
+                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: t.color, border: `1px solid ${t.color}55`, borderRadius: 20, padding: '2px 8px', background: `${t.color}1a`, flexShrink: 0 }}>
+                                    {t.label}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
     )
 }
 
@@ -699,8 +835,8 @@ export default function PokemonCard({ item, onClose, isFavorite, onToggleFav, FI
                         <WearOverlay wornCount={worn}/>
                     </div>
 
-                    {/* ── HOLOGRAPHIC OVERLAY (full card face) ── */}
-                    <HoloOverlay active={hovering} mx={mx} my={my} isShiny={!!item.shiny}/>
+                    {/* ── HOLO SHINE OVERLAY (shiny cards only) ── */}
+                    <HoloShine isShiny={!!item.shiny} hovering={hovering} mx={mx} my={my}/>
 
                     {/* ── Favourite Button ── */}
                     <motion.button whileTap={{ scale: 0.82 }}

@@ -935,3 +935,129 @@ html, body {
   display: flex;
   flex-direction: column;
 }
+
+/* ============================
+   Holo / Shine System
+   (Port of simeydotme/pokemon-cards-css technique)
+   CSS custom properties are set via JS inline styles
+   on the card element, then consumed here.
+   ============================ */
+
+/* The shine layer — iridescent rainbow foil */
+.card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 22;
+  overflow: hidden;
+  /* Base: rotating iridescent gradient */
+  background-image:
+    /* Outer glow hue band */
+    repeating-linear-gradient(
+      0deg,
+      hsl(calc(var(--holo-angle, 180deg) + 0deg),   100%, 50%, 0.10) 0%,
+      hsl(calc(var(--holo-angle, 180deg) + 60deg),  100%, 50%, 0.10) 16%,
+      hsl(calc(var(--holo-angle, 180deg) + 120deg), 100%, 50%, 0.10) 33%,
+      hsl(calc(var(--holo-angle, 180deg) + 180deg), 100%, 50%, 0.10) 50%,
+      hsl(calc(var(--holo-angle, 180deg) + 240deg), 100%, 50%, 0.10) 66%,
+      hsl(calc(var(--holo-angle, 180deg) + 300deg), 100%, 50%, 0.10) 83%,
+      hsl(calc(var(--holo-angle, 180deg) + 360deg), 100%, 50%, 0.10) 100%
+    ),
+    /* Diagonal prismatic stripes */
+    repeating-linear-gradient(
+      133deg,
+      #0e153a 0%, #0e153a 3%,
+      #001f5ff0 10%, #001f5ff0 11%,
+      transparent 12%,
+      #9cc4ff60 15%, #9cc4ff60 16%,
+      transparent 22%,
+      #0e153a 24%,
+      #001f5ff0 36%, #001f5ff0 37%,
+      transparent 39%,
+      #9cc4ff60 43%, #9cc4ff60 44%,
+      transparent 51%,
+      #0e153a 54%
+    ),
+    /* Color-shift overlay */
+    linear-gradient(
+      var(--pointer-from-top, 0.5turn),
+      hsl(calc(var(--holo-hue-shift, 140) + 0)  , 80%, 60%, 0.06) 0%,
+      hsl(calc(var(--holo-hue-shift, 140) + 40) , 80%, 60%, 0.12) 30%,
+      hsl(calc(var(--holo-hue-shift, 140) + 90) , 80%, 60%, 0.10) 50%,
+      hsl(calc(var(--holo-hue-shift, 140) + 150), 80%, 60%, 0.10) 70%,
+      hsl(calc(var(--holo-hue-shift, 140) + 200), 80%, 60%, 0.06) 100%
+    );
+  background-size: 100% 700%, 200px 700px, 300% 300%;
+  background-position:
+    center,
+    calc( var(--pointer-from-left, 0.5) * 200px ) center,
+    var(--background-x, 50%) var(--background-y, 50%);
+  mix-blend-mode: color-dodge;
+  opacity: calc(var(--card-opacity, 0) * 0.9 + 0.08);
+  transition: opacity 0.5s;
+  filter: brightness(0.9) contrast(2.5) saturate(0.9);
+}
+
+/* The glare layer — white specular highlight following cursor */
+.card-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 23;
+  overflow: hidden;
+  background-image:
+    radial-gradient(
+      farthest-corner circle at
+        var(--pointer-x, 50%) var(--pointer-y, 50%),
+      hsl(0, 0%, 100%, 0.8) 10%,
+      hsl(0, 0%, 100%, 0.65) 20%,
+      hsl(0, 0%, 0%, 0.5) 90%
+    );
+  mix-blend-mode: overlay;
+  opacity: calc(var(--card-opacity, 0) * 0.8);
+  transition: opacity 0.5s;
+}
+
+/* Prismatic shimmer animation on shiny cards */
+@keyframes holoShimmer {
+  0%   { --holo-hue-shift: 0;   --holo-angle: 0deg; }
+  25%  { --holo-hue-shift: 90;  --holo-angle: 90deg; }
+  50%  { --holo-hue-shift: 180; --holo-angle: 180deg; }
+  75%  { --holo-hue-shift: 270; --holo-angle: 270deg; }
+  100% { --holo-hue-shift: 360; --holo-angle: 360deg; }
+}
+
+/* When shiny and NOT being hovered, play a slow auto-shimmer */
+.card-holo-shiny .card-shine {
+  animation: holoShimmer 6s linear infinite;
+  opacity: 0.22;
+}
+.card-holo-shiny .card-glare {
+  opacity: 0.05;
+}
+/* When interacting, snap to cursor-driven values */
+.card-holo-shiny.card-holo-active .card-shine {
+  animation: none;
+}
+.card-holo-shiny.card-holo-active .card-glare {
+  opacity: calc(var(--card-opacity, 0) * 0.8);
+}
+
+@property --holo-hue-shift {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: false;
+}
+@property --holo-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Tag ticker — infinite left-scroll (duplicate tags in JS so it loops) */
+@keyframes tagTicker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

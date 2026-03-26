@@ -44,7 +44,19 @@ const ACCENT = {
     shoes: 'var(--electric-purple)', // #8A2BE2
     overlayer: '#FF006E',              // Hot pink
     onepiece: '#FF006E',              // Hot pink
+    gold: '#FFD700',                 // Gold for lock-in
 }
+
+// ── Appreciation Quotes ───────────────────────────────────────────────────
+const APPRECIATION_QUOTES = [
+    "That fit is 100% heat! 🔥",
+    "Lookin' sharp, Trainer! ✨",
+    "A legendary combination. ⭐",
+    "Style points off the charts! 📈",
+    "You just won the fashion game. 🏆",
+    "Certified Drip. 🧊",
+    "Absolute perfection! ✨",
+]
 
 // ── Responsive value helpers (avoid re-creating strings) ────────────────────
 const R = {
@@ -313,6 +325,122 @@ function ReelTile({ items, spinning, onSpinEnd, delay = 0, accentColor = ACCENT.
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Component: GoldenLockFrame
+   ═══════════════════════════════════════════════════════════════════════════ */
+function GoldenLockFrame({ active, locked }) {
+    return (
+        <AnimatePresence>
+            {(active || locked) && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                        opacity: 1,
+                        boxShadow: locked
+                            ? '0 0 40px rgba(255,215,0,0.6), inset 0 0 20px rgba(255,215,0,0.3)'
+                            : [
+                                '0 0 10px rgba(255,215,0,0.2), inset 0 0 5px rgba(255,215,0,0.1)',
+                                '0 0 30px rgba(255,215,0,0.5), inset 0 0 15px rgba(255,215,0,0.2)',
+                                '0 0 10px rgba(255,215,0,0.2), inset 0 0 5px rgba(255,215,0,0.1)'
+                            ]
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={locked ? { duration: 0.5 } : { repeat: Infinity, duration: 2 }}
+                    style={{
+                        position: 'absolute',
+                        inset: R.pad,
+                        border: `3px solid ${ACCENT.gold}`,
+                        borderRadius: R.radiusStd,
+                        pointerEvents: 'none',
+                        zIndex: 10,
+                    }}
+                >
+                    {locked && (
+                        <motion.div
+                            animate={{
+                                x: ['-100%', '200%'],
+                                transition: { repeat: Infinity, duration: 1.5, ease: "linear" }
+                            }}
+                            style={{
+                                position: 'absolute',
+                                top: 0, bottom: 0, width: '30%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                                transform: 'skewX(-20deg)',
+                            }}
+                        />
+                    )}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Component: CelebrationOverlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+function CelebrationOverlay({ visible, quote }) {
+    if (!visible) return null
+
+    return (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 30, pointerEvents: 'none', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.5, opacity: 0 }}
+                style={{ textAlign: 'center', padding: 20 }}
+            >
+                <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    style={{ fontSize: 40, marginBottom: 10 }}
+                >
+                    ✨👑✨
+                </motion.div>
+                <div style={{
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 22,
+                    fontWeight: 900,
+                    color: 'var(--cyber-yellow)',
+                    textShadow: '0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.9)',
+                    letterSpacing: '1px'
+                }}>
+                    {quote}
+                </div>
+            </motion.div>
+
+            {/* Simple particle effect */}
+            {Array.from({ length: 20 }).map((_, i) => (
+                <motion.div
+                    key={i}
+                    initial={{
+                        x: '50%',
+                        y: '50%',
+                        scale: 0,
+                        rotate: 0,
+                        opacity: 1
+                    }}
+                    animate={{
+                        x: `${Math.random() * 100}%`,
+                        y: `${Math.random() * 100}%`,
+                        scale: Math.random() * 1.5 + 0.5,
+                        rotate: Math.random() * 360,
+                        opacity: 0
+                    }}
+                    transition={{ duration: 1.5, ease: "easeOut", delay: Math.random() * 0.2 }}
+                    style={{
+                        position: 'absolute',
+                        width: 8, height: 8,
+                        background: i % 2 === 0 ? 'var(--cyber-yellow)' : 'white',
+                        borderRadius: i % 3 === 0 ? '50%' : '2px',
+                    }}
+                />
+            ))}
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Component: ArtisticFrame
    ═══════════════════════════════════════════════════════════════════════════ */
 function ArtisticFrame() {
@@ -574,12 +702,19 @@ export default function DripRoulette() {
     const [results, setResults] = useState({ top: TOPS[0], bottom: BOTTOMS[0], shoes: SHOES[0] })
     const [showPrompt, setShowPrompt] = useState(false)
     const [showToast, setShowToast] = useState(false)
+    const [addModalMode, setAddModalMode] = useState(1) // 1 for normal, 'camera' for auto-camera
 
     // ── Prompt engine state ──────────────────────────────────────────────
     const [activePools, setActivePools] = useState(null)
     const [explanation, setExplanation] = useState(null)
     const [showExplanation, setShowExplanation] = useState(false)
     const [lastPromptWasAI, setLastPromptWasAI] = useState(false)
+
+    // ── Lock mechanism state ─────────────────────────────────────────────
+    const [showLockPrompt, setShowLockPrompt] = useState(false)
+    const [isLocked, setIsLocked] = useState(false)
+    const [showCelebration, setShowCelebration] = useState(false)
+    const [activeQuote, setActiveQuote] = useState('')
 
     // ── Refs ─────────────────────────────────────────────────────────────
     const spinsDoneRef = useRef(0)
@@ -641,11 +776,29 @@ export default function DripRoulette() {
         if (spinning) return
         spinsDoneRef.current = 0
 
+        // Reset lock states
+        setShowLockPrompt(false)
+        setIsLocked(false)
+        setShowCelebration(false)
+
         // Process prompt through the engine
         const trimmedPrompt = prompt.trim()
-        const result = processPrompt(trimmedPrompt, {
-            tops: TOPS, bottoms: BOTTOMS, shoes: SHOES, overlayers: OVERLAYERS,
-        }, { includeOverlayer: showOverlayer })
+        
+        // Helper to bias a pool towards uploaded images (/apparel/)
+        const biasPool = (items) => {
+            const uploaded = items.filter(it => it.image?.startsWith('/apparel/'))
+            if (uploaded.length > 0 && Math.random() < 0.8) return uploaded
+            return items
+        }
+
+        const baseWardrobe = {
+            tops: biasPool(TOPS),
+            bottoms: biasPool(BOTTOMS),
+            shoes: biasPool(SHOES),
+            overlayers: biasPool(OVERLAYERS),
+        }
+
+        const result = processPrompt(trimmedPrompt, baseWardrobe, { includeOverlayer: showOverlayer })
 
         if (result.prompted) {
             setActivePools(result.pools)
@@ -689,8 +842,44 @@ export default function DripRoulette() {
             setShowToast(true)
             toastTimerRef.current = setTimeout(() => setShowToast(false), 2500)
             // Explanation is NOT auto-shown here — user scrolls down to see it
+
+            // Trigger lock prompt
+            setTimeout(() => {
+                setShowLockPrompt(true)
+            }, 500)
         }
-    }, [onePieceMode, showOverlayer])
+    }, [])
+
+    /* ── handleLockIn ───────────────────────────────────────────────── */
+    const handleLockIn = useCallback(() => {
+        if (isLocked) return
+
+        setIsLocked(true)
+        setShowLockPrompt(false)
+        
+        // Random quote
+        const quote = APPRECIATION_QUOTES[Math.floor(Math.random() * APPRECIATION_QUOTES.length)]
+        setActiveQuote(quote)
+        setShowCelebration(true)
+
+        // Increment wornCount for selected items
+        const selectedItems = [
+            results.top,
+            results.bottom,
+            results.shoes,
+            showOverlayer ? results.overlayer : null,
+            onePieceMode ? results.onepiece : null
+        ].filter(Boolean)
+
+        selectedItems.forEach(item => {
+            if (item) {
+                item.wornCount = (item.wornCount || 0) + 1
+            }
+        })
+
+        // Auto-hide celebration
+        setTimeout(() => setShowCelebration(false), 3500)
+    }, [isLocked, results, showOverlayer, onePieceMode])
 
     /* ── toggleOverlayer ────────────────────────────────────────────── */
     const toggleOverlayer = useCallback(() => {
@@ -756,6 +945,50 @@ export default function DripRoulette() {
                 }}
             >
                 <ArtisticFrame />
+                <GoldenLockFrame active={showLockPrompt} locked={isLocked} />
+
+                {/* ── Lock In Prompt ── */}
+                <AnimatePresence>
+                    {showLockPrompt && (
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 10, opacity: 0 }}
+                            style={{
+                                position: 'absolute', bottom: 12, left: 0, right: 0,
+                                zIndex: 25, display: 'flex', justifyContent: 'center'
+                            }}
+                        >
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleLockIn}
+                                style={{
+                                    height: R.fabXl,
+                                    padding: '0 24px',
+                                    background: 'var(--cyber-yellow)',
+                                    color: 'black',
+                                    border: 'none',
+                                    borderRadius: 40,
+                                    fontFamily: 'var(--font-heading)',
+                                    fontSize: 14,
+                                    fontWeight: 900,
+                                    letterSpacing: '1.5px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 25px rgba(255,215,0,0.5)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                LOCK IN?
+                            </motion.button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ── Celebration Overlay ── */}
+                <CelebrationOverlay visible={showCelebration} quote={activeQuote} />
 
                 {/* ── Layout: One-Piece Mode ───────────────────────────── */}
                 {onePieceMode && (
@@ -821,6 +1054,10 @@ export default function DripRoulette() {
                 transition: 'bottom 0.2s ease',
             }}>
                 <motion.button whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.1 }}
+                    onClick={() => {
+                        setAddModalMode('camera')
+                        setShowAddModal(true)
+                    }}
                     style={{
                         width: R.fabMed, height: R.fabMed, borderRadius: '50%', cursor: 'pointer',
                         background: 'rgba(138,43,226,0.18)', backdropFilter: 'blur(12px)',
@@ -832,7 +1069,10 @@ export default function DripRoulette() {
                 </motion.button>
 
                 <motion.button whileTap={{ scale: 0.85, rotate: 90 }} whileHover={{ scale: 1.1 }}
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => {
+                        setAddModalMode(1)
+                        setShowAddModal(true)
+                    }}
                     style={{
                         width: R.fabLg, height: R.fabLg, borderRadius: '50%', cursor: 'pointer',
                         background: 'var(--cyber-yellow)', border: 'none',
@@ -902,7 +1142,10 @@ export default function DripRoulette() {
 
             {/* ─── Add Apparel modal ───────────────────────────────────── */}
             <AnimatePresence>
-                {showAddModal && <AddApparelModal onClose={() => setShowAddModal(false)} />}
+                {showAddModal && <AddApparelModal 
+                    initialStep={addModalMode}
+                    onClose={() => setShowAddModal(false)} 
+                />}
             </AnimatePresence>
         </div>
     )

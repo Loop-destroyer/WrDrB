@@ -1,0 +1,22 @@
+[
+  {
+    "id": "item_031",
+    "name": "Short-Sleeve Plaid Shirt",
+    "category": "Topwear",
+    "subtype": "Short-Sleeve Plaid Shirt",
+    "color": "#7A8DA1",
+    "tags": [
+      "#topwear",
+      "#plaid"
+    ],
+    "image": "/apparel/item_031.png",
+    "emoji": "topwear",
+    "features": "Short-sleeve button-down shirt with a subtle multi-color grid plaid pattern. Features a standard point collar, a single open patch pocket on the left chest, and a traditional button placket with contrasting white buttons. The fabric has a slightly textured, breathable look.",
+    "brand": "Unknown",
+    "material": "Cotton",
+    "vibe": "Casual Coastal",
+    "pairing_notes": "Perfect for a relaxed summer look when paired with khaki chino shorts and leather boat shoes. For a more modern street aesthetic, wear it unbuttoned over a white rib-knit tank with relaxed-fit navy trousers.",
+    "rarity": 25,
+    "stylePoints": 35
+  }
+]

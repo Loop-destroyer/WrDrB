@@ -442,14 +442,15 @@ function FitCardBody({ fit }) {
             fit.shoes     && { item: fit.shoes,     flex: 1.2, label: 'Shoes' },
           ].filter(Boolean)
 
-    const tagList = [
+    const allTags = [
         fit.style     && { label: `✧ ${fit.style}`,     color: '#FFD700' },
         fit.season    && { label: `🌤 ${fit.season}`,    color: '#39FF14' },
         fit.occasion  && { label: `📅 ${fit.occasion}`,  color: '#a688fa' },
         fit.archetype && { label: `🔥 ${fit.archetype}`, color: '#FF4500' },
+        ...(fit.top?.tags     || []).slice(0, 2).map(t => ({ label: t, color: '#99aaff' })),
+        ...(fit.bottom?.tags  || []).slice(0, 1).map(t => ({ label: t, color: '#aaffcc' })),
+        ...(fit.shoes?.tags   || []).slice(0, 1).map(t => ({ label: t, color: '#ffccaa' })),
     ].filter(Boolean)
-    const tickerTags   = [...tagList, ...tagList]
-    const tickerDur    = `${Math.max(8, tagList.length * 3.5)}s`
 
     // Build a richer vibe description if none provided
     const vibeText = fit.vibe ||
@@ -492,48 +493,26 @@ function FitCardBody({ fit }) {
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5, overflow: 'hidden' }}>
 
                 {/* ── Info section ── */}
-                <div style={{ flex: 1, padding: '5px 5px 0', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', minHeight: 0 }}>
+                <div style={{ flex: 1, padding: '5px 5px 0', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden', minHeight: 0 }}>
 
                     {/* Vibe header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 9, fontWeight: 900, fontStyle: 'italic', color: '#e33', textTransform: 'uppercase', letterSpacing: 0.5 }}>Vibe</span>
-                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 13, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>
+                        <span style={{ fontSize: 11, fontWeight: 900, fontStyle: 'italic', color: '#e33', textTransform: 'uppercase', letterSpacing: 0.5 }}>Vibe</span>
+                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>
                             {fit.occasion || fit.style || 'Everyday'}
                         </span>
                     </div>
 
                     {/* One-liner description */}
-                    <div style={{ fontSize: 10, lineHeight: 1.5, color: '#333', fontStyle: 'italic', borderLeft: '2px solid #FFD70066', paddingLeft: 5 }}>
+                    <div style={{ fontSize: 13, lineHeight: 1.5, color: '#333', fontStyle: 'italic', borderLeft: '2px solid #FFD70066', paddingLeft: 6 }}>
                         {vibeText}
                     </div>
 
                     {/* Why this combo works */}
-                    <div style={{ fontSize: 9, lineHeight: 1.45, color: '#555' }}>
+                    <div style={{ fontSize: 12, lineHeight: 1.4, color: '#555', marginBottom: 4 }}>
                         <span style={{ fontWeight: 800, color: '#444' }}>Why it works: </span>
                         {comboWhy}
                     </div>
-
-                    {/* Occasions + Season row */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 1 }}>
-                        {fit.occasion && <span style={{ fontSize: 8, background: '#210d3a', color: '#a688fa', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>📅 {fit.occasion}</span>}
-                        {fit.season   && <span style={{ fontSize: 8, background: '#0a2a0a', color: '#39FF14', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>🌤 {fit.season}</span>}
-                        {fit.style    && <span style={{ fontSize: 8, background: '#2a1a00', color: '#FFD700', borderRadius: 20, padding: '2px 7px', fontWeight: 700 }}>✧ {fit.style}</span>}
-                    </div>
-
-                    {/* Piece list */}
-                    {pieces.length > 0 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
-                            {pieces.map(({ label, item }) => (
-                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    <span style={{ fontSize: 12 }}>{item.emoji}</span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 9, fontWeight: 800, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                                        <div style={{ fontSize: 8, color: '#888' }}>{label} &middot; {item.archetype || item.category} &middot; <span style={{ color: '#FFD700' }}>XP {item.stylePoints}</span></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {/* ── Frosted glass meter block ── */}
@@ -571,16 +550,30 @@ function FitCardBody({ fit }) {
                     </div>
                 </div>
 
-                {/* ── Tag ticker ── */}
-                {tickerTags.length > 0 && (
-                    <div style={{ flexShrink: 0, height: 26, overflow: 'hidden', background: '#0e0e0e', borderRadius: 5 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap', animation: `tagTicker ${tickerDur} linear infinite`, willChange: 'transform', paddingLeft: 8 }}>
-                            {tickerTags.map((t, i) => (
-                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: t.color, border: `1px solid ${t.color}55`, borderRadius: 20, padding: '2px 8px', background: `${t.color}1a`, flexShrink: 0 }}>
-                                    {t.label}
-                                </span>
-                            ))}
-                        </div>
+                {/* ── Static tag cloud (Dark & Readable) ── */}
+                {allTags.length > 0 && (
+                    <div style={{ flexShrink: 0, display: 'flex', flexWrap: 'wrap', gap: 5, padding: '2px 2px 4px' }}>
+                        {allTags.map((t, i) => (
+                            <span key={i} style={{
+                                display: 'inline-flex', alignItems: 'center',
+                                fontSize: 10, fontWeight: 900,
+                                color: '#fff',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                border: `2px solid ${t.color}`,
+                                borderRadius: 12, padding: '3px 10px',
+                                background: t.color === '#FFD700' ? '#2a1a00' : // Gold
+                                            t.color === '#39FF14' ? '#0a2a0a' : // Green
+                                            t.color === '#a688fa' ? '#1a0d3a' : // Purple
+                                            t.color === '#FF4500' ? '#3a0d0a' : // Red/Orange
+                                            t.color === '#99aaff' ? '#0d1a3a' : // Blue
+                                            t.color === '#aaffcc' ? '#0a2a1a' : // Teal
+                                            '#111',
+                                flexShrink: 0,
+                                boxShadow: `0 2px 4px ${t.color}33`,
+                            }}>
+                                {t.label}
+                            </span>
+                        ))}
                     </div>
                 )}
             </div>
@@ -738,12 +731,9 @@ export default function PokemonCard({ item, onClose, isFavorite, onToggleFav, FI
                                     <WearOverlay wornCount={worn}/>
                                 </div>
 
-                                {/* STATS BAR */}
-                                <div style={{ background: 'rgba(0,0,0,0.55)', padding: '3px 12px', margin: '4px 10px 0', display: 'flex', justifyContent: 'space-between', gap: 4, fontSize: 9, fontWeight: 700, fontStyle: 'italic', color: '#ccc', borderRadius: 4 }}>
+                                <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px 12px', margin: '4px 10px 0', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', gap: 4, fontSize: 10, fontWeight: 700, fontStyle: 'italic', color: '#eee', borderRadius: 4 }}>
                                     <span>NO.{item.id}</span>
-                                    <span>{item.archetype}</span>
-                                    {item.brand && <span>{item.brand}</span>}
-                                    {item.size  && <span>{item.size}</span>}
+                                    <span>{item.subtype || item.name}</span>
                                     <span style={{ color: conditionInfo.class === 'mint' ? '#39FF14' : conditionInfo.class === 'beat' ? '#FF4444' : '#FFD700' }}>{conditionInfo.label}</span>
                                 </div>
 
@@ -756,15 +746,15 @@ export default function PokemonCard({ item, onClose, isFavorite, onToggleFav, FI
                                     </div>
                                 )}
 
-                                {/* INFO */}
                                 <div style={{ flex: 1, padding: '8px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 7 }}>
                                     <div>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 2 }}>
-                                            <span style={{ color: '#e33', fontSize: 11, fontWeight: 900, fontStyle: 'italic' }}>Ability</span>
-                                            <span style={{ fontFamily: 'var(--font-heading)', fontSize: 12, fontWeight: 800, color: '#111' }}>Drip Echo</span>
+                                            <span style={{ color: '#FF006E', fontSize: 11, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase' }}>{item.vibe || 'Neutral'}</span>
+                                            <span style={{ height: 1, flex: 1, background: 'rgba(0,0,0,0.05)' }} />
+                                            {item.material && <span style={{ fontSize: 10, fontWeight: 700, color: '#666' }}>{item.material}</span>}
                                         </div>
-                                        <div style={{ fontSize: 10, lineHeight: 1.45, color: '#222' }}>
-                                            {item.description || 'A staple wardrobe item that guarantees solid style points.'}
+                                        <div style={{ fontSize: 11, lineHeight: 1.5, color: '#333', fontWeight: 500 }}>
+                                            {item.features || item.description || 'A unique piece characterized by its distinct silhouette and texture.'}
                                         </div>
                                     </div>
                                     {item.conditionDetails && (
@@ -776,12 +766,12 @@ export default function PokemonCard({ item, onClose, isFavorite, onToggleFav, FI
                                     {(item.pairsWith || item.clashesWith) && (
                                         <>
                                             <hr style={{ border: 0, borderTop: '1px solid rgba(0,0,0,0.12)', margin: 0 }}/>
-                                            {item.pairsWith && (
+                                            {(item.pairing_notes || item.pairsWith) && (
                                                 <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
                                                     <span style={{ fontSize: 13 }}>✅</span>
                                                     <div>
-                                                        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 11, fontWeight: 800, color: '#1a7a1a' }}>Pairs Well</div>
-                                                        <div style={{ fontSize: 10, fontStyle: 'italic', color: '#444' }}>{item.pairsWith}</div>
+                                                        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 11, fontWeight: 800, color: '#1a7a1a' }}>Style Pairing</div>
+                                                        <div style={{ fontSize: 10, fontStyle: 'italic', color: '#444' }}>{item.pairing_notes || item.pairsWith}</div>
                                                     </div>
                                                 </div>
                                             )}
@@ -800,19 +790,11 @@ export default function PokemonCard({ item, onClose, isFavorite, onToggleFav, FI
                             </>
                         )}
 
-                        {/* ── BOTTOM BAR ── */}
-                        <div style={{ padding: '7px 12px', background: 'rgba(0,0,0,0.85)', borderTop: '2px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, fontWeight: 700, color: '#555', textTransform: 'uppercase' }}>
-                                    <span>Wear</span><span>{Math.min(worn, 100)}/100</span>
-                                </div>
-                                <div style={{ width: '100%', height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-                                    <div style={{ width: `${Math.min((worn / 100) * 100, 100)}%`, height: '100%', background: worn > 75 ? '#FF4500' : worn > 50 ? 'linear-gradient(90deg, #FFD700, #FF4500)' : 'linear-gradient(90deg, #32CD32, #FFD700)', borderRadius: 3, transition: 'width 0.5s ease' }}/>
-                                </div>
-                            </div>
+                        {/* ── BOTTOM BAR — Cleaned ── */}
+                        <div style={{ padding: '7px 12px', background: 'rgba(0,0,0,0.85)', borderTop: '2px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'flex-end' }}>
                             {!isFit && availableFits.length > 0 && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    <span style={{ fontSize: 8, fontWeight: 700, color: '#FFD700', textTransform: 'uppercase' }}>Fits</span>
+                                    <span style={{ fontSize: 8, fontWeight: 800, color: '#FFD700', textTransform: 'uppercase' }}>Fits</span>
                                     {availableFits.map(fit => (
                                         <motion.div key={fit.id} whileHover={{ scale: 1.3, y: -3 }} whileTap={{ scale: 0.88 }}
                                             onClick={(e) => { e.stopPropagation(); setFitPopup(fit) }}

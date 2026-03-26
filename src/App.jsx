@@ -77,7 +77,7 @@ function AppContent() {
           <span className="top-bar-logo">WrDrB</span>
           <div className="weather-widget">
             <CloudSun size={13} />
-            <span className="weather-temp">72°F</span>
+            <span className="weather-temp">22°C</span>
             <span>It's sunny – Wear light!</span>
           </div>
           <div className="top-bar-right">

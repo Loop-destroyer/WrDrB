@@ -159,6 +159,11 @@ function scoreItem(item, intents) {
         }
     }
 
+    // Boost real/uploaded items (identified by local path)
+    if (item.image?.startsWith('/apparel/')) {
+        score += 50 
+    }
+
     return score
 }
 

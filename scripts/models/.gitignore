@@ -1,0 +1,6 @@
+# Models dir — weights are too large for git
+*.pt
+*.pth
+*.onnx
+*.bin
+garment_detector/

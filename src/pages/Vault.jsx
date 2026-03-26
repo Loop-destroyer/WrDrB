@@ -1,11 +1,27 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Plus, Heart, Clock, X, ChevronRight, Zap, BarChart2 } from 'lucide-react'
-import { TOPS, BOTTOMS, SHOES, ACCESSORIES, OVERLAYERS, ONE_PIECES, FITS } from '../data/mockData'
+import { TOPS, BOTTOMS, SHOES, ACCESSORIES, OVERLAYERS, ONE_PIECES, FITS as INITIAL_FITS, SAMPLE_ITEMS } from '../data/mockData'
 import AddApparelModal from '../components/AddApparelModal'
 import PokemonCard from '../components/PokemonCard'
 
-const ALL_ITEMS = [...TOPS, ...BOTTOMS, ...SHOES, ...ACCESSORIES, ...OVERLAYERS, ...ONE_PIECES]
+// Merge sample items into their respective category arrays
+const SAMPLE_TOPS      = SAMPLE_ITEMS.filter(i => i.category === 'Tops')
+const SAMPLE_BOTTOMS   = SAMPLE_ITEMS.filter(i => i.category === 'Bottoms')
+const SAMPLE_SHOES     = SAMPLE_ITEMS.filter(i => i.category === 'Shoes')
+const SAMPLE_BLING     = SAMPLE_ITEMS.filter(i => i.category === 'Bling')
+const SAMPLE_OVERLAYER = SAMPLE_ITEMS.filter(i => i.category === 'Overlayer')
+const SAMPLE_ONEPIECE  = SAMPLE_ITEMS.filter(i => i.category === 'One-Piece')
+
+const ALL_TOPS      = [...SAMPLE_TOPS, ...TOPS]
+const ALL_BOTTOMS   = [...SAMPLE_BOTTOMS, ...BOTTOMS]
+const ALL_SHOES     = [...SAMPLE_SHOES, ...SHOES]
+const ALL_BLING     = [...SAMPLE_BLING, ...ACCESSORIES]
+const ALL_OVERLAYER = [...SAMPLE_OVERLAYER, ...OVERLAYERS]
+const ALL_ONEPIECE  = [...SAMPLE_ONEPIECE, ...ONE_PIECES]
+
+const ALL_ITEMS = [...SAMPLE_ITEMS, ...TOPS, ...BOTTOMS, ...SHOES, ...ACCESSORIES, ...OVERLAYERS, ...ONE_PIECES]
+
 
 const CATEGORY_COLORS = {
     'One-Piece': '#8A2BE2',
@@ -65,6 +81,23 @@ function SeeAllModal({ title, items, isFits, onSelect, onClose, favorites = new 
                 <div className="hide-scroll" style={{ overflowY: 'auto', padding: '12px 16px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                     {isFits ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14, justifyContent: 'center' }}>
+                            {/* Add Fit Button */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => { onSelect({ _isAddFit: true }); onClose() }}
+                                style={{
+                                    height: 180, borderRadius: 20, background: '#1a1a1a',
+                                    border: '2px dashed #333', display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer'
+                                }}
+                            >
+                                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FF006E1a', border: '2px solid #FF006E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Plus size={24} color="#FF006E" />
+                                </div>
+                                <span style={{ fontSize: 13, fontWeight: 800, color: '#FF006E' }}>Add New Fit</span>
+                            </motion.div>
+
                             {items.map(fit => (
                                 <FitCard
                                     key={fit.id}
@@ -102,14 +135,18 @@ function SeeAllModal({ title, items, isFits, onSelect, onClose, favorites = new 
                                             ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             : <span style={{ fontSize: 36 }}>{item.emoji}</span>
                                         }
+                                        <div style={{
+                                            position: 'absolute', top: 0, left: 0, right: 0,
+                                            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+                                            padding: '4px 8px',
+                                            fontSize: 9, fontWeight: 800, color: '#fff',
+                                            textTransform: 'uppercase', letterSpacing: '1px'
+                                        }}>
+                                            {item.subtype || item.name}
+                                        </div>
                                         {favorites.has(item.id) && (
-                                            <div style={{ position: 'absolute', top: 5, right: 5, width: 16, height: 16, background: '#FF006E', borderRadius: '50%', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Heart size={9} color="#fff" fill="#fff" />
-                                            </div>
-                                        )}
-                                        {item.shiny && (
-                                            <div style={{ position: 'absolute', top: 5, left: 5, background: 'rgba(0,0,0,0.5)', padding: '2px 4px', borderRadius: 4, fontSize: 8, fontWeight: 800, color: '#FFD700' }}>
-                                                ✦ SHINY
+                                            <div style={{ position: 'absolute', top: 5, right: 5, width: 20, height: 20, background: '#FF006E', borderRadius: '50%', border: '2.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(255, 0, 110, 0.5)' }}>
+                                                <Heart size={10} color="#fff" fill="#fff" />
                                             </div>
                                         )}
                                         <div style={{
@@ -258,7 +295,9 @@ export default function Vault() {
     const [selectedCard, setSelectedCard] = useState(null)
     const [search, setSearch]             = useState('')
     const [activeFilter, setActiveFilter] = useState('all')
+    const [fits, setFits]                 = useState(INITIAL_FITS)
     const [seeAllData, setSeeAllData]     = useState(null)
+    const [isAddingFit, setIsAddingFit]   = useState(false)
     const [favorites, setFavorites]       = useState(
         new Set(ALL_ITEMS.filter(i => i.favorite).map(i => i.id))
     )
@@ -270,13 +309,14 @@ export default function Vault() {
     })
 
     const categories = [
-        { label: '👕 Tops',       key: 'Tops',      items: TOPS,       color: CATEGORY_COLORS['Tops'] },
-        { label: '👖 Bottoms',    key: 'Bottoms',   items: BOTTOMS,    color: CATEGORY_COLORS['Bottoms'] },
-        { label: '👟 Shoes',      key: 'Shoes',     items: SHOES,      color: CATEGORY_COLORS['Shoes'] },
-        { label: '💎 Bling',      key: 'Bling',     items: ACCESSORIES,color: CATEGORY_COLORS['Bling'] },
-        { label: '🧥 Overlayers', key: 'Overlayer', items: OVERLAYERS, color: CATEGORY_COLORS['Overlayer'] },
-        { label: '👗 One-Pieces', key: 'One-Piece', items: ONE_PIECES, color: CATEGORY_COLORS['One-Piece'] },
+        { label: '👕 Tops',       key: 'Tops',      items: ALL_TOPS,      color: CATEGORY_COLORS['Tops'] },
+        { label: '👖 Bottoms',    key: 'Bottoms',   items: ALL_BOTTOMS,   color: CATEGORY_COLORS['Bottoms'] },
+        { label: '👟 Shoes',      key: 'Shoes',     items: ALL_SHOES,     color: CATEGORY_COLORS['Shoes'] },
+        { label: '💎 Bling',      key: 'Bling',     items: ALL_BLING,     color: CATEGORY_COLORS['Bling'] },
+        { label: '🧥 Overlayers', key: 'Overlayer', items: ALL_OVERLAYER, color: CATEGORY_COLORS['Overlayer'] },
+        { label: '👗 One-Pieces', key: 'One-Piece', items: ALL_ONEPIECE,  color: CATEGORY_COLORS['One-Piece'] },
     ]
+
 
     // Determine which sections to show based on activeFilter
     const showFits  = activeFilter === 'all' || activeFilter === 'fits'
@@ -293,14 +333,14 @@ export default function Vault() {
     const filteredFits = useMemo(() => {
         if (!showFits) return []
         const q = search.toLowerCase()
-        return FITS.filter(f => !q || f.name.toLowerCase().includes(q) || (f.style||'').toLowerCase().includes(q))
-    }, [search, showFits])
+        return fits.filter(f => !q || f.name.toLowerCase().includes(q) || (f.style||'').toLowerCase().includes(q))
+    }, [search, showFits, fits])
 
     return (
         <div className="page-wrapper" style={{ background: 'var(--deep-black)', minHeight: '100%' }}>
 
             {/* ── Search Bar ──────────────────────────────────────────── */}
-            <div style={{ padding: '12px 16px 0px', display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ padding: '12px 16px 0px', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
                 <div style={{
                     flex: 1, display: 'flex', alignItems: 'center', gap: 10,
                     background: '#1c1c1c',
@@ -366,7 +406,7 @@ export default function Vault() {
                 {[
                     { icon: '👑', label: 'Total Drip', value: ALL_ITEMS.length },
                     { icon: '💛', label: 'Favs',       value: favorites.size },
-                    { icon: '🔥', label: 'Fits',       value: FITS.length },
+                    { icon: '🔥', label: 'Fits',       value: fits.length },
                     { icon: '⭐', label: 'Avg XP',     value: Math.round(ALL_ITEMS.reduce((a, i) => a + i.stylePoints, 0) / ALL_ITEMS.length) },
                 ].map(s => (
                     <div key={s.label} style={{ flexShrink: 0, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 12, padding: '8px 14px', textAlign: 'center', minWidth: 68 }}>
@@ -383,13 +423,17 @@ export default function Vault() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                         <span style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 800, color: '#fff' }}>🔥 My Fits</span>
                         <button
-                            onClick={() => setSeeAllData({ title: 'All Fits', items: FITS, isFits: true })}
+                            onClick={() => setSeeAllData({ title: 'All Fits', items: fits, isFits: true })}
                             style={{ background: 'none', border: 'none', color: '#a688fa', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
                         >
                             See All <ChevronRight size={14} />
                         </button>
                     </div>
-                    <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10 }}>
+                    <div className="hide-scroll" style={{
+                        display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10,
+                        touchAction: 'pan-x', WebkitOverflowScrolling: 'touch',
+                        cursor: 'grab',
+                    }}>
                         {filteredFits.map(fit => (
                             <FitCard
                                 key={fit.id}
@@ -458,6 +502,26 @@ export default function Vault() {
                                         <div style={{ position: 'absolute', top: 5, left: 5, fontSize: 10, background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: '1px 4px' }}>✨</div>
                                     )}
 
+                                    {/* Type Label */}
+                                    <div style={{
+                                        position: 'absolute', top: 0, left: 0, right: 0,
+                                        background: 'rgba(0,0,0,0.6)', padding: '2px 6px',
+                                        fontSize: 8, fontWeight: 900, color: '#fff',
+                                        textTransform: 'uppercase', letterSpacing: '0.5px'
+                                    }}>
+                                        {item.type || 'Apparel'}
+                                    </div>
+
+                                    {/* Type Label */}
+                                    <div style={{
+                                        position: 'absolute', top: 0, left: 0, right: 0,
+                                        background: 'rgba(0,0,0,0.6)', padding: '2px 6px',
+                                        fontSize: 8, fontWeight: 900, color: '#fff',
+                                        textTransform: 'uppercase', letterSpacing: '0.5px'
+                                    }}>
+                                        {item.type || 'Apparel'}
+                                    </div>
+
                                     {/* XP banner */}
                                     <div style={{
                                         position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -481,6 +545,17 @@ export default function Vault() {
             <AnimatePresence>
                 {showAddModal && <AddApparelModal onClose={() => setShowAddModal(false)} />}
 
+                {isAddingFit && (
+                    <AddFitModal
+                        fits={fits}
+                        onClose={() => setIsAddingFit(false)}
+                        onSave={(newFit) => {
+                            setFits(prev => [newFit, ...prev])
+                            setIsAddingFit(false)
+                        }}
+                    />
+                )}
+
                 {selectedCard && (
                     <PokemonCard
                         key={selectedCard.id}
@@ -488,7 +563,7 @@ export default function Vault() {
                         onClose={() => setSelectedCard(null)}
                         isFavorite={favorites.has(selectedCard.id)}
                         onToggleFav={() => toggleFav(selectedCard.id)}
-                        FITS={FITS}
+                        FITS={fits}
                     />
                 )}
 
@@ -497,12 +572,207 @@ export default function Vault() {
                         title={seeAllData.title}
                         items={seeAllData.items}
                         isFits={seeAllData.isFits}
-                        onSelect={item => setSelectedCard(seeAllData.isFits ? { ...item, _isFit: true, category: 'Fit' } : item)}
+                        onSelect={item => {
+                            if (item._isAddFit) {
+                                setIsAddingFit(true)
+                            } else {
+                                setSelectedCard(seeAllData.isFits ? { ...item, _isFit: true, category: 'Fit' } : item)
+                            }
+                        }}
                         onClose={() => setSeeAllData(null)}
                         favorites={favorites}
                     />
                 )}
             </AnimatePresence>
         </div>
+    )
+}
+
+// ── Add Fit Modal ────────────────────────────────────────────────────────────
+function AddFitModal({ onClose, onSave }) {
+    const [selected, setSelected] = useState({ Top: null, Bottoms: null, Shoes: null, Bling: null })
+    const [name, setName]         = useState('New Fit')
+    const [tags, setTags]         = useState(['#new_fit'])
+    const [tempTag, setTempTag]   = useState('')
+    const [selecting, setSelecting] = useState(null) // Category name
+
+    const categories = [
+        { name: 'Top',      items: TOPS,       icon: '👕', key: 'Top' },
+        { name: 'Bottoms',   items: BOTTOMS,    icon: '👖', key: 'Bottoms' },
+        { name: 'Shoes',     items: SHOES,      icon: '👟', key: 'Shoes' },
+        { name: 'Bling',     items: ACCESSORIES,icon: '💎', key: 'Bling' },
+    ]
+
+    // Synergy Score Logic
+    const synergy = useMemo(() => {
+        const picked = Object.values(selected).filter(Boolean)
+        if (picked.length < 2) return picked.length * 15
+        let base = 60
+        const archs = picked.map(i => i.archetype)
+        const unique = new Set(archs)
+        base += (picked.length - unique.size) * 20
+        return Math.min(base, 100)
+    }, [selected])
+
+    const handleSave = () => {
+        if (!selected.Top || !selected.Bottoms) return alert('Tops and Bottoms required!')
+        const newFit = {
+            id: 'f' + Date.now(),
+            name,
+            style: selected.Top.archetype,
+            archetype: selected.Top.archetype,
+            wornCount: 0,
+            favorite: false,
+            top: selected.Top,
+            bottom: selected.Bottoms,
+            shoes: selected.Shoes,
+            bling: selected.Bling,
+            rating: (synergy / 10).toFixed(1),
+            stylePoints: Math.floor(synergy),
+            season: 'All Season',
+            occasion: 'Custom',
+            vibe: `A custom combination featuring ${selected.Top.name}.`,
+            tags: tags
+        }
+        onSave(newFit)
+    }
+
+    return (
+        <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+            onClick={onClose}
+        >
+            <motion.div
+                className="hide-scroll"
+                onClick={e => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                style={{
+                    width: '92%', maxWidth: 420, height: '85vh',
+                    background: '#0a0a0a', borderRadius: 24, border: '1px solid #333',
+                    display: 'flex', flexDirection: 'column', position: 'relative', overflowY: 'auto'
+                }}
+            >
+                {/* Header */}
+                <div style={{ padding: '20px 20px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ fontFamily: 'var(--font-heading)', color: '#fff', margin: 0 }}>Create Fit</h2>
+                    <button onClick={onClose} style={{ background: '#222', border: 'none', borderRadius: '50%', padding: 5, color: '#555' }}><X size={20}/></button>
+                </div>
+
+                <div style={{ padding: '4px 20px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    {/* Name Input */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 900, color: '#e33', textTransform: 'uppercase' }}>Fit Name</span>
+                        <input
+                            value={name} onChange={e => setName(e.target.value)}
+                            style={{ background: '#1a1a1a', border: '1.5px solid #333', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 15, fontWeight: 700 }}
+                        />
+                    </div>
+
+                    {/* Synergy Bar */}
+                    <div style={{ background: '#111', padding: 12, borderRadius: 16, border: '1px solid #222' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <span style={{ fontSize: 11, fontWeight: 800, color: '#aaa' }}>SYNERGY</span>
+                            <span style={{ fontSize: 11, fontWeight: 900, color: '#FF006E' }}>{synergy}%</span>
+                        </div>
+                        <div style={{ height: 8, background: '#222', borderRadius: 4, overflow: 'hidden' }}>
+                            <motion.div
+                                initial={{ width: 0 }} animate={{ width: `${synergy}%` }}
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #FF006E, #FFD700)', borderRadius: 4 }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Slots */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        {categories.map(cat => (
+                            <div key={cat.key} onClick={() => setSelecting(cat)} style={{
+                                height: 100, borderRadius: 16, background: '#1a1a1a', border: '1.5px solid #333',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                position: 'relative', overflow: 'hidden'
+                            }}>
+                                {selected[cat.key] ? (
+                                    <>
+                                        {selected[cat.key].image ? <img src={selected[cat.key].image} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }}/> : <span style={{ fontSize: 32 }}>{selected[cat.key].emoji}</span>}
+                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.8)', padding: '2px 0', textAlign: 'center', fontSize: 9, fontWeight: 800, color: '#fff' }}>{selected[cat.key].name}</div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span style={{ fontSize: 24, opacity: 0.3 }}>{cat.icon}</span>
+                                        <span style={{ fontSize: 9, fontWeight: 800, color: '#444', marginTop: 4 }}>Select {cat.name}</span>
+                                    </>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Tags */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <span style={{ fontSize: 10, fontWeight: 900, color: '#444', textTransform: 'uppercase' }}>Fit Tags</span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {tags.map((t, idx) => (
+                                <span key={idx} onClick={() => setTags(prev => prev.filter((_, i) => i !== idx))} style={{ fontSize: 10, fontWeight: 800, background: '#1a1a1a', border: '1.5px solid #333', borderRadius: 8, padding: '4px 8px', color: '#888', cursor: 'pointer' }}>
+                                    {t} ×
+                                </span>
+                            ))}
+                            <input
+                                placeholder="+ Tag"
+                                value={tempTag}
+                                onChange={e => setTempTag(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && tempTag.trim()) {
+                                        setTags(prev => [...prev, tempTag.trim().startsWith('#') ? tempTag.trim() : '#' + tempTag.trim()])
+                                        setTempTag('')
+                                    }
+                                }}
+                                style={{ background: 'none', border: 'none', outline: 'none', color: '#FF006E', fontSize: 10, fontWeight: 800, width: 60 }}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ flex: 1 }} />
+
+                    <button
+                        onClick={handleSave}
+                        disabled={!selected.Top || !selected.Bottoms}
+                        style={{
+                            padding: '16px', borderRadius: 16, background: (!selected.Top || !selected.Bottoms) ? '#222' : 'linear-gradient(135deg, #FF006E, #FFD700)',
+                            border: 'none', color: '#fff', fontSize: 16, fontWeight: 900, fontFamily: 'var(--font-heading)', cursor: 'pointer',
+                            opacity: (!selected.Top || !selected.Bottoms) ? 0.5 : 1
+                        }}
+                    >
+                        Save Fit
+                    </button>
+                </div>
+
+                {/* Sub-selector Overlay */}
+                <AnimatePresence>
+                    {selecting && (
+                        <motion.div
+                            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                            style={{ position: 'absolute', inset: 0, background: '#0a0a0a', zIndex: 10, display: 'flex', flexDirection: 'column' }}
+                        >
+                            <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #222' }}>
+                                <button onClick={() => setSelecting(null)} style={{ background: '#222', border: 'none', borderRadius: '50%', padding: 5, color: '#fff' }}><ChevronRight size={20} style={{ transform: 'rotate(180deg)' }}/></button>
+                                <span style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 900, color: '#fff' }}>Select {selecting.name}</span>
+                            </div>
+                            <div className="hide-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                                {selecting.items.map(item => (
+                                    <div key={item.id} onClick={() => { setSelected(p => ({ ...p, [selecting.key]: item })); setSelecting(null); }} style={{
+                                        aspectRatio: '1', borderRadius: 12, background: '#1a1a1a', border: '1.5px solid #333',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer'
+                                    }}>
+                                        {item.image ? <img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/> : <span style={{ fontSize: 24 }}>{item.emoji}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        </motion.div>
     )
 }

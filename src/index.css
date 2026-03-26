@@ -20,19 +20,22 @@
   --nav-height: 72px;
   --top-bar-height: 64px;
   --transition-liquid: cubic-bezier(0.4, 0, 0.2, 1);
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Bricolage Grotesque', sans-serif;
   --border-radius-card: 16px;
   --border-radius-pill: 50px;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   background: #1a1a2e;
   display: flex;
@@ -62,7 +65,7 @@ html, body {
   box-shadow:
     0 0 0 2px #333,
     0 0 60px rgba(138, 43, 226, 0.4),
-    0 40px 80px rgba(0,0,0,0.8);
+    0 40px 80px rgba(0, 0, 0, 0.8);
   flex-shrink: 0;
 }
 
@@ -103,13 +106,19 @@ html, body {
   padding-bottom: calc(var(--nav-height) + 8px);
 }
 
-.page-content::-webkit-scrollbar { display: none; }
-.page-content { scrollbar-width: none; }
+.page-content::-webkit-scrollbar {
+  display: none;
+}
+
+.page-content {
+  scrollbar-width: none;
+}
 
 /* Utility to hide scrollbars globally on horizontal lists */
 .hide-scroll {
   scrollbar-width: none;
 }
+
 .hide-scroll::-webkit-scrollbar {
   display: none;
 }
@@ -128,6 +137,7 @@ html, body {
   cursor: pointer;
   transition: all 0.18s var(--transition-liquid);
 }
+
 .chip.active {
   background: var(--cyber-yellow);
   border-color: var(--cyber-yellow);
@@ -138,9 +148,9 @@ html, body {
 /* Top Bar */
 .top-bar {
   height: var(--top-bar-height);
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -192,9 +202,9 @@ html, body {
   left: 0;
   right: 0;
   height: var(--nav-height);
-  background: rgba(5, 5, 5, 0.97);
-  backdrop-filter: blur(30px);
-  border-top: 1px solid var(--glass-border);
+  background: rgba(8, 8, 8, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -298,7 +308,10 @@ html, body {
   padding: 4px 16px 12px;
   scrollbar-width: none;
 }
-.h-scroll::-webkit-scrollbar { display: none; }
+
+.h-scroll::-webkit-scrollbar {
+  display: none;
+}
 
 /* Buttons */
 .btn-primary {
@@ -314,7 +327,10 @@ html, body {
   transition: all 0.2s var(--transition-liquid);
   letter-spacing: 0.5px;
 }
-.btn-primary:active { transform: scale(0.97); }
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
 
 .btn-secondary {
   font-family: var(--font-heading);
@@ -342,7 +358,10 @@ html, body {
   transition: all 0.2s var(--transition-liquid);
   flex-shrink: 0;
 }
-.btn-icon:active { transform: scale(0.93); }
+
+.btn-icon:active {
+  transform: scale(0.93);
+}
 
 /* Chip / Tag */
 .chip {
@@ -361,6 +380,7 @@ html, body {
   transition: all 0.15s;
   white-space: nowrap;
 }
+
 .chip.active {
   background: var(--cyber-yellow);
   color: var(--deep-black);
@@ -384,7 +404,10 @@ html, body {
   transition: all 0.2s var(--transition-liquid);
   z-index: 90;
 }
-.fab:active { transform: scale(0.93); }
+
+.fab:active {
+  transform: scale(0.93);
+}
 
 /* Input */
 .text-input {
@@ -399,11 +422,15 @@ html, body {
   outline: none;
   transition: border-color 0.2s;
 }
+
 .text-input:focus {
   border-color: var(--electric-purple);
   box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
 }
-.text-input::placeholder { color: var(--text-muted); }
+
+.text-input::placeholder {
+  color: var(--text-muted);
+}
 
 /* ============================
    Trading Card
@@ -417,27 +444,41 @@ html, body {
   border: 1px solid #2a2a4a;
   padding: 10px;
   cursor: pointer;
-  transition: transform 0.2s var(--transition-liquid), box-shadow 0.2s;
+  transition: transform 0.4s var(--transition-liquid), box-shadow 0.4s, border-color 0.4s;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .trading-card:active { transform: scale(0.96); }
-.trading-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(138, 43, 226, 0.3); }
+.trading-card:hover { 
+  transform: translateY(-6px) scale(1.02); 
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(138, 43, 226, 0.15);
+  border-color: rgba(138, 43, 226, 0.4);
+}
+
+.trading-card:active {
+  transform: scale(0.96);
+}
+
+.trading-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(138, 43, 226, 0.3);
+}
 
 .trading-card.favorite {
   border-color: transparent;
 }
+
 .trading-card.favorite::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 16px;
   padding: 1.5px;
-  background: conic-gradient(
-    from var(--holo-angle, 0deg),
-    #FFD700, #FF006E, #8A2BE2, #00F5FF, #39FF14, #FFD700
-  );
+  background: conic-gradient(from var(--holo-angle, 0deg),
+      #FFD700, #FF006E, #8A2BE2, #00F5FF, #39FF14, #FFD700);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: holo-spin 3s linear infinite;
@@ -448,8 +489,11 @@ html, body {
   initial-value: 0deg;
   inherits: false;
 }
+
 @keyframes holo-spin {
-  to { --holo-angle: 360deg; }
+  to {
+    --holo-angle: 360deg;
+  }
 }
 
 .trading-card .card-image {
@@ -520,10 +564,26 @@ html, body {
   padding: 2px 6px;
   border-radius: 6px;
 }
-.condition-badge.mint { background: rgba(57, 255, 20, 0.15); color: #39FF14; }
-.condition-badge.street { background: rgba(255, 215, 0, 0.15); color: #FFD700; }
-.condition-badge.vintage { background: rgba(255, 107, 107, 0.15); color: #FF6B6B; }
-.condition-badge.beat { background: rgba(150, 150, 150, 0.15); color: #aaa; }
+
+.condition-badge.mint {
+  background: rgba(57, 255, 20, 0.15);
+  color: #39FF14;
+}
+
+.condition-badge.street {
+  background: rgba(255, 215, 0, 0.15);
+  color: #FFD700;
+}
+
+.condition-badge.vintage {
+  background: rgba(255, 107, 107, 0.15);
+  color: #FF6B6B;
+}
+
+.condition-badge.beat {
+  background: rgba(150, 150, 150, 0.15);
+  color: #aaa;
+}
 
 /* Fit Card (wider) */
 .fit-card {
@@ -539,7 +599,10 @@ html, body {
   overflow: hidden;
   position: relative;
 }
-.fit-card:hover { transform: translateY(-4px); }
+
+.fit-card:hover {
+  transform: translateY(-4px);
+}
 
 /* ============================
    Popup / Modal
@@ -548,7 +611,7 @@ html, body {
 .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: flex-end;
@@ -566,7 +629,10 @@ html, body {
   max-height: 85%;
   overflow-y: auto;
 }
-.modal-sheet::-webkit-scrollbar { display: none; }
+
+.modal-sheet::-webkit-scrollbar {
+  display: none;
+}
 
 .modal-handle {
   width: 40px;
@@ -625,7 +691,8 @@ html, body {
 }
 
 /* gradient mask top/bottom */
-.reel-window::before, .reel-window::after {
+.reel-window::before,
+.reel-window::after {
   content: '';
   position: absolute;
   left: 0;
@@ -634,10 +701,12 @@ html, body {
   z-index: 2;
   pointer-events: none;
 }
+
 .reel-window::before {
   top: 0;
   background: linear-gradient(to bottom, var(--card-bg), transparent);
 }
+
 .reel-window::after {
   bottom: 0;
   background: linear-gradient(to top, var(--card-bg), transparent);
@@ -728,7 +797,10 @@ html, body {
   font-family: var(--font-body);
   font-size: 13px;
 }
-.prompt-bar input::placeholder { color: var(--text-muted); }
+
+.prompt-bar input::placeholder {
+  color: var(--text-muted);
+}
 
 .prompt-send {
   width: 32px;
@@ -743,7 +815,10 @@ html, body {
   flex-shrink: 0;
   transition: all 0.2s;
 }
-.prompt-send:active { transform: scale(0.92); }
+
+.prompt-send:active {
+  transform: scale(0.92);
+}
 
 /* ============================
    Feed / Reel
@@ -755,7 +830,10 @@ html, body {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
 }
-.feed-reel::-webkit-scrollbar { display: none; }
+
+.feed-reel::-webkit-scrollbar {
+  display: none;
+}
 
 .feed-card {
   height: 100%;
@@ -785,7 +863,10 @@ html, body {
   cursor: pointer;
   transition: transform 0.2s var(--transition-liquid);
 }
-.product-card:hover { transform: translateY(-3px); }
+
+.product-card:hover {
+  transform: translateY(-3px);
+}
 
 .product-card .product-image {
   width: 100%;
@@ -881,7 +962,7 @@ html, body {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ============================
@@ -907,33 +988,70 @@ html, body {
    ============================ */
 
 @keyframes spin-fast {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-100%);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 8px var(--cyber-yellow); }
-  50% { box-shadow: 0 0 24px var(--cyber-yellow), 0 0 48px rgba(255,215,0,0.3); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--cyber-yellow);
+  }
+
+  50% {
+    box-shadow: 0 0 24px var(--cyber-yellow), 0 0 48px rgba(255, 215, 0, 0.3);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
 }
 
 @keyframes float-up {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes slide-in-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.animate-float { animation: float-up 3s ease-in-out infinite; }
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float {
+  animation: float-up 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
 
 /* Loading shimmer */
 .skeleton {
@@ -953,6 +1071,7 @@ html, body {
   transition: border-color 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
+
 .skin-tone-swatch.selected {
   border-color: var(--cyber-yellow);
   transform: scale(1.15);
@@ -984,19 +1103,16 @@ html, body {
   /* Base: rotating iridescent gradient */
   background-image:
     /* Outer glow hue band */
-    repeating-linear-gradient(
-      0deg,
-      hsl(calc(var(--holo-angle, 180deg) + 0deg),   100%, 50%, 0.10) 0%,
-      hsl(calc(var(--holo-angle, 180deg) + 60deg),  100%, 50%, 0.10) 16%,
+    repeating-linear-gradient(0deg,
+      hsl(calc(var(--holo-angle, 180deg) + 0deg), 100%, 50%, 0.10) 0%,
+      hsl(calc(var(--holo-angle, 180deg) + 60deg), 100%, 50%, 0.10) 16%,
       hsl(calc(var(--holo-angle, 180deg) + 120deg), 100%, 50%, 0.10) 33%,
       hsl(calc(var(--holo-angle, 180deg) + 180deg), 100%, 50%, 0.10) 50%,
       hsl(calc(var(--holo-angle, 180deg) + 240deg), 100%, 50%, 0.10) 66%,
       hsl(calc(var(--holo-angle, 180deg) + 300deg), 100%, 50%, 0.10) 83%,
-      hsl(calc(var(--holo-angle, 180deg) + 360deg), 100%, 50%, 0.10) 100%
-    ),
+      hsl(calc(var(--holo-angle, 180deg) + 360deg), 100%, 50%, 0.10) 100%),
     /* Diagonal prismatic stripes */
-    repeating-linear-gradient(
-      133deg,
+    repeating-linear-gradient(133deg,
       #0e153a 0%, #0e153a 3%,
       #001f5ff0 10%, #001f5ff0 11%,
       transparent 12%,
@@ -1007,21 +1123,18 @@ html, body {
       transparent 39%,
       #9cc4ff60 43%, #9cc4ff60 44%,
       transparent 51%,
-      #0e153a 54%
-    ),
+      #0e153a 54%),
     /* Color-shift overlay */
-    linear-gradient(
-      var(--pointer-from-top, 0.5turn),
-      hsl(calc(var(--holo-hue-shift, 140) + 0)  , 80%, 60%, 0.06) 0%,
-      hsl(calc(var(--holo-hue-shift, 140) + 40) , 80%, 60%, 0.12) 30%,
-      hsl(calc(var(--holo-hue-shift, 140) + 90) , 80%, 60%, 0.10) 50%,
+    linear-gradient(var(--pointer-from-top, 0.5turn),
+      hsl(calc(var(--holo-hue-shift, 140) + 0), 80%, 60%, 0.06) 0%,
+      hsl(calc(var(--holo-hue-shift, 140) + 40), 80%, 60%, 0.12) 30%,
+      hsl(calc(var(--holo-hue-shift, 140) + 90), 80%, 60%, 0.10) 50%,
       hsl(calc(var(--holo-hue-shift, 140) + 150), 80%, 60%, 0.10) 70%,
-      hsl(calc(var(--holo-hue-shift, 140) + 200), 80%, 60%, 0.06) 100%
-    );
+      hsl(calc(var(--holo-hue-shift, 140) + 200), 80%, 60%, 0.06) 100%);
   background-size: 100% 700%, 200px 700px, 300% 300%;
   background-position:
     center,
-    calc( var(--pointer-from-left, 0.5) * 200px ) center,
+    calc(var(--pointer-from-left, 0.5) * 200px) center,
     var(--background-x, 50%) var(--background-y, 50%);
   mix-blend-mode: color-dodge;
   opacity: calc(var(--card-opacity, 0) * 0.9 + 0.08);
@@ -1038,13 +1151,10 @@ html, body {
   z-index: 23;
   overflow: hidden;
   background-image:
-    radial-gradient(
-      farthest-corner circle at
-        var(--pointer-x, 50%) var(--pointer-y, 50%),
+    radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
       hsl(0, 0%, 100%, 0.8) 10%,
       hsl(0, 0%, 100%, 0.65) 20%,
-      hsl(0, 0%, 0%, 0.5) 90%
-    );
+      hsl(0, 0%, 0%, 0.5) 90%);
   mix-blend-mode: overlay;
   opacity: calc(var(--card-opacity, 0) * 0.8);
   transition: opacity 0.5s;
@@ -1060,6 +1170,7 @@ html, body {
       0px center,
       0% 0%;
   }
+
   100% {
     --holo-hue-shift: 360;
     --holo-angle: 360deg;
@@ -1075,13 +1186,16 @@ html, body {
   animation: holoShimmer 6s linear infinite;
   opacity: 0.22;
 }
+
 .card-holo-shiny .card-glare {
   opacity: 0.05;
 }
+
 /* When interacting, snap to cursor-driven values */
 .card-holo-shiny.card-holo-active .card-shine {
   animation: none;
 }
+
 .card-holo-shiny.card-holo-active .card-glare {
   opacity: calc(var(--card-opacity, 0) * 0.8);
 }
@@ -1091,6 +1205,7 @@ html, body {
   initial-value: 0;
   inherits: false;
 }
+
 @property --holo-angle {
   syntax: '<angle>';
   initial-value: 0deg;
@@ -1099,6 +1214,11 @@ html, body {
 
 /* Tag ticker — infinite left-scroll (duplicate tags in JS so it loops) */
 @keyframes tagTicker {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
